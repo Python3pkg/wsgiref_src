@@ -1,8 +1,8 @@
 """Base classes for server/gateway implementations"""
 
 from types import StringType
-from util import FileWrapper, guess_scheme, is_hop_by_hop
-from headers import Headers
+from .util import FileWrapper, guess_scheme, is_hop_by_hop
+from .headers import Headers
 
 import sys, os, time
 
@@ -55,7 +55,7 @@ class BaseHandler:
     # os_environ is used to supply configuration from the OS environment:
     # by default it's a copy of 'os.environ' as of import time, but you can
     # override this in e.g. your __init__ method.
-    os_environ = dict(os.environ.items())
+    os_environ = dict(list(os.environ.items()))
 
     # Collaborator classes
     wsgi_file_wrapper = FileWrapper     # set to None to disable
@@ -159,7 +159,7 @@ class BaseHandler:
 
         Subclasses can extend this to add other defaults.
         """
-        if not self.headers.has_key('Content-Length'):
+        if 'Content-Length' not in self.headers:
             self.set_content_length()
 
     def start_response(self, status, headers,exc_info=None):
@@ -169,7 +169,7 @@ class BaseHandler:
             try:
                 if self.headers_sent:
                     # Re-raise original exception if headers sent
-                    raise exc_info[0], exc_info[1], exc_info[2]
+                    raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
             finally:
                 exc_info = None        # avoid dangling circular ref
         elif self.headers is not None:
@@ -194,11 +194,11 @@ class BaseHandler:
         if self.origin_server:
             if self.client_is_modern():
                 self._write('HTTP/%s %s\r\n' % (self.http_version,self.status))
-                if not self.headers.has_key('Date'):
+                if 'Date' not in self.headers:
                     self._write(
                         'Date: %s\r\n' % format_date_time(time.time())
                     )
-                if self.server_software and not self.headers.has_key('Server'):
+                if self.server_software and 'Server' not in self.headers:
                     self._write('Server: %s\r\n' % self.server_software)
         else:
             self._write('Status: %s\r\n' % self.status)
@@ -470,7 +470,7 @@ class CGIHandler(BaseCGIHandler):
 
     def __init__(self):
         BaseCGIHandler.__init__(
-            self, sys.stdin, sys.stdout, sys.stderr, dict(os.environ.items()),
+            self, sys.stdin, sys.stdout, sys.stderr, dict(list(os.environ.items())),
             multithread=False, multiprocess=True
         )
 

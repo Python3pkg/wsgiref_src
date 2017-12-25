@@ -10,8 +10,8 @@ For example usage, see the 'if __name__=="__main__"' block at the end of the
 module.  See also the BaseHTTPServer module docs for other API information.
 """
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-import urllib, sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib.request, urllib.parse, urllib.error, sys
 from wsgiref.handlers import SimpleHandler
 
 __version__ = "0.1"
@@ -93,7 +93,7 @@ class WSGIRequestHandler(BaseHTTPRequestHandler):
         else:
             path,query = self.path,''
 
-        env['PATH_INFO'] = urllib.unquote(path)
+        env['PATH_INFO'] = urllib.parse.unquote(path)
         env['QUERY_STRING'] = query
 
         host = self.address_string()
@@ -163,13 +163,13 @@ class WSGIRequestHandler(BaseHTTPRequestHandler):
 
 
 def demo_app(environ,start_response):
-    from StringIO import StringIO
+    from io import StringIO
     stdout = StringIO()
-    print >>stdout, "Hello world!"
-    print >>stdout
-    h = environ.items(); h.sort()
+    print("Hello world!", file=stdout)
+    print(file=stdout)
+    h = list(environ.items()); h.sort()
     for k,v in h:
-        print >>stdout, k,'=',`v`
+        print(k,'=',repr(v), file=stdout)
     start_response("200 OK", [('Content-Type','text/plain')])
     return [stdout.getvalue()]
 
@@ -186,7 +186,7 @@ def make_server(
 if __name__ == '__main__':
     httpd = make_server('', 8000, demo_app)
     sa = httpd.socket.getsockname()
-    print "Serving HTTP on", sa[0], "port", sa[1], "..."
+    print("Serving HTTP on", sa[0], "port", sa[1], "...")
     import webbrowser
     webbrowser.open('http://localhost:8000/xyz?abc')
     httpd.handle_request()  # serve one request, then exit

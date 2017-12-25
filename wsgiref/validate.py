@@ -265,10 +265,10 @@ class IteratorWrapper:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         assert_(not self.closed,
             "Iterator read after closed")
-        v = self.iterator.next()
+        v = next(self.iterator)
         if self.check_start_response is not None:
             assert_(self.check_start_response,
                 "The application returns and we started iterating over its body, but start_response has not yet been called")
@@ -311,7 +311,7 @@ def check_environ(environ):
             'so application errors are more likely',
             WSGIWarning)
 
-    for key in environ.keys():
+    for key in list(environ.keys()):
         if '.' in key:
             # Extension, we don't care about its type
             continue
@@ -345,7 +345,7 @@ def check_environ(environ):
             "Invalid CONTENT_LENGTH: %r" % environ['CONTENT_LENGTH'])
 
     if not environ.get('SCRIPT_NAME'):
-        assert_(environ.has_key('PATH_INFO'),
+        assert_('PATH_INFO' in environ,
             "One of SCRIPT_NAME or PATH_INFO are required (PATH_INFO "
             "should at least be '/' if SCRIPT_NAME is empty)")
     assert_(environ.get('SCRIPT_NAME') != '/',

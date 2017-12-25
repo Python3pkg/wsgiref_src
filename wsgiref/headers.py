@@ -63,7 +63,7 @@ class Headers:
         Does *not* raise an exception if the header is missing.
         """
         name = name.lower()
-        self._headers[:] = [kv for kv in self._headers if kv[0].lower()<>name]
+        self._headers[:] = [kv for kv in self._headers if kv[0].lower()!=name]
 
     def __getitem__(self,name):
         """Get the first header value for 'name'
@@ -142,7 +142,7 @@ class Headers:
         return self._headers[:]
 
     def __repr__(self):
-        return "Headers(%s)" % `self._headers`
+        return "Headers(%s)" % repr(self._headers)
 
     def __str__(self):
         """str() returns the formatted headers, complete with end line,
@@ -181,7 +181,7 @@ class Headers:
         parts = []
         if _value is not None:
             parts.append(_value)
-        for k, v in _params.items():
+        for k, v in list(_params.items()):
             if v is None:
                 parts.append(k.replace('_', '-'))
             else:
